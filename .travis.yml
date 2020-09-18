@@ -11,7 +11,7 @@ before_script:
 - sleep 3 # give xvfb some time to start
 
 script:
-- ./gradlew build cucumber
+- ./gradlew build 
 
 after_success:
 - ./gradlew jacocoTestReport coveralls
