@@ -1,26 +1,38 @@
-package keywords;
+package gradle.cucumber;
 
+import cucumber.api.java.en.Given;
+import cucumber.api.java.en.When;
+import cucumber.api.java.en.Then;
+import cucumber.api.java.Before;
+import cucumber.api.java.After;
+
+import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat; 
+import static org.hamcrest.Matchers.*;
 
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
-import edu.wofford.*;
+import edu.wofford.ConsoleMain;
 
 
-public class Console {
+public class ConsoleStepDefinitions {
     private String inputString;
     private String outputString;
 
-    public void theGameHasStarted() {
+    @Given("the game has started")
+    public void the_game_has_started() {
         inputString = "";
         outputString = "";
     }
-    
-    public void thePlayerMarks(Integer int1, Integer int2) {
+
+    @Given("the player marks  {int}  {int}")
+    public void the_player_marks(Integer int1, Integer int2) {
         inputString += int1 + " " + int2 + "\n";
     }
-    
-    public void thePlayerViewsTheBoard() {
+
+    @When("the player views the board")
+    public void the_player_views_the_board() {
         InputStream originalIn = System.in;
         PrintStream originalOut = System.out;
         try {
@@ -37,7 +49,7 @@ public class Console {
         }
     }
 
-    private String getLastGrid(String s) {
+    private static String getLastGrid(String s) {
         String regex = "(?s).*[ XO]\\|[ XO]\\|[ XO]\\R-----\\R[ XO]\\|[ XO]\\|[ XO]\\R-----\\R[ XO]\\|[ XO]\\|[ XO]";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(s);
@@ -48,18 +60,24 @@ public class Console {
         return value;
     }
 
-    private String getLocationAt(String s, int row, int col) {
+    private static String getLocationAt(String s, int row, int col) {
         int charnum = row * 12 + col * 2;
         return s.substring(charnum, charnum + 1);
     }
-    
-    public String getMarkAtLocation(Integer int1, Integer int2) {
-        String lastGrid = getLastGrid(outputString);
-        return getLocationAt(lastGrid, int1, int2);
+
+    @Then("the location {int} {int} should be marked {string}")
+    public void the_location_should_be_marked(Integer int1, Integer int2, String string) {
+        String loc = getLocationAt(getLastGrid(outputString), int1, int2);
+        assertThat(loc, is(string));
     }
 
-    public String getGameResult() {
+    @Then("the game should end")
+    public void the_game_should_end() { }
+
+    @Then("the game result should be {string}")
+    public void the_game_result_should_be(String string) {
         String s = outputString.trim();
-        return s.substring(s.lastIndexOf("\n"));
+        assertThat(s.substring(s.lastIndexOf("\n")), containsString(string));
     }
+
 }

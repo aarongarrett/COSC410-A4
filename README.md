@@ -86,7 +86,7 @@ build the project by running the command
 
 You can run the acceptance tests. 
 
-`gradlew runrobot`
+`gradlew cucumber`
 
 Finally, you can run the unit test coverage report.
 

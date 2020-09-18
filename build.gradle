@@ -1,83 +1,72 @@
 buildscript {
     repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath files(mkdir('build/classes/java/main'))
-        classpath 'org.robotframework:swinglibrary:1.9.8'
+        jcenter()
     }
 }
 
 plugins {
-    id 'com.github.kt3k.coveralls' version '2.6.3'
-    id 'org.roboscratch.robot' version '0.1.2'
+    id 'com.github.kt3k.coveralls' version '2.8.4'
 }
 
 apply plugin: 'java'
-apply plugin: 'jacoco'
 apply plugin: 'application'
+apply plugin: 'jacoco'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
+mainClassName = 'edu.wofford.Main'
+
 repositories {
-    mavenCentral()
+    jcenter()
 }
 
-project.ext {
-    javaVersion = '1.8'
-    junitVersion = '4.12'
+jar {
+    archiveBaseName = rootProject.name
+    manifest {
+        attributes 'Main-Class': application.mainClassName
+    }
 }
 
-compileJava {
-    targetCompatibility = javaVersion
-    sourceCompatibility = javaVersion
-}
 
 dependencies {
-    compile 'org.slf4j:slf4j-api:1.7.18'
-    compile 'org.glassfish:javax.json:1.1.2'
-    testCompile 'junit:junit:' + junitVersion
-    testCompile "org.mockito:mockito-core:1.+"
-    testCompile 'org.powermock:powermock-module-junit4:1.6.5'
-    testCompile 'org.powermock:powermock-api-mockito:1.6.5'
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'org.slf4j:slf4j-api:1.7.26'
+    implementation 'com.github.mkolisnyk:cucumber-runner:1.3.4'
+    implementation 'org.assertj:assertj-swing:3.17.0'
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.hamcrest:java-hamcrest:2.0.0.0'
+    testImplementation 'org.mockito:mockito-all:1.10.19'
+    testImplementation 'org.powermock:powermock-mockito-release-full:1.6.4'
+    testImplementation 'io.cucumber:cucumber-java:4.3.1'
 }
 
 tasks.withType(JavaCompile) {
     options.compilerArgs += ['-proc:none', '-Xlint:unchecked', '-Xlint:deprecation']
 }
 
-version = '1.0'
-mainClassName = 'edu.wofford.Main'
 
-jar {
-    manifest {
-        attributes 'Main-Class': mainClassName,
-                   'Implementation-Title': 'Tic Tac Toe',
-                   'Implementation-Version': version
-    }
-}
-
-test {
-    jacoco {
-        append = false
-    }
+jacoco {
+    toolVersion = "0.8.3"
 }
 
 jacocoTestReport {
     reports {
-        xml.enabled = true // coveralls plugin depends on xml format report
-        html.enabled = true
+        html {
+            enabled true
+        }
+        xml {
+            enabled true
+        }
     }
+
     afterEvaluate {
-        classDirectories = files(classDirectories.files.collect {
-            fileTree(dir: it,
-                     exclude: [
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
                         '**/edu/wofford/Main*',
                         '**/edu/wofford/ConsoleMain*',
-                        '**/edu/wofford/GuiMain*',
-                        '**/keywords/**'
-                    ])
-        })
+                        '**/edu/wofford/GuiMain*']
+                    )
+        }))
     }
 }
 
@@ -88,10 +77,23 @@ javadoc {
     exclude 'edu/wofford/Main*'
     exclude 'edu/wofford/ConsoleMain*'
     exclude 'edu/wofford/GuiMain*'
-    exclude 'keywords/**'
 }
 
-runrobot.data_sources = 'src/acceptance'
-runrobot.outputdir = 'build/reports/robot'
-runrobot.debugfile = 'debug.log'
-runrobot.dependsOn build
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+task cucumber() {
+    dependsOn assemble, compileTestJava
+    doLast {
+        javaexec {
+            main = "cucumber.api.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = ['--plugin', 'html:build/reports/cucumber', '--glue', 'gradle.cucumber', 'src/test/resources']
+        }
+    }
+    timeout = Duration.ofMinutes(3)
+}
+

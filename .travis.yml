@@ -1,12 +1,12 @@
 language: java
 
 before_script:
+- "Xvfb :99 &"
 - "export DISPLAY=:99.0"
-- "sh -e /etc/init.d/xvfb start"
 - sleep 3 # give xvfb some time to start
 
 script:
-- ./gradlew build runrobot
+- ./gradlew build cucumber
 
 after_success:
 - ./gradlew jacocoTestReport coveralls
