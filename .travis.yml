@@ -1,5 +1,10 @@
 language: java
 
+env:
+  global:
+    - COVERALLS_REPO_TOKEN=kwej0xyQVradkZFuFqI4CLdXZpXqdfj86
+
+
 before_script:
 - "Xvfb :99 &"
 - "export DISPLAY=:99.0"
